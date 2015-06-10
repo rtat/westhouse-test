@@ -1,0 +1,110 @@
+html {
+	margin: 10px 10px 50px 10px;
+}
+
+body {
+	font-family: Arial, Helvetica, sans-serif;
+	width: 1275px;
+}
+
+p, ul {
+	
+	font-size: 10.5pt;
+}
+
+ul li {
+	margin-bottom: 5px;
+}
+
+h2 {
+	margin-top: 1.5em;
+}
+
+hr {
+	margin: 20px 0px;
+	width: 200px;
+}
+
+label {
+	font-weight: bold;
+}
+
+cite {
+	margin-left: 3em;
+	font-size: 0.75rem;
+}
+
+#var-list {
+	clear: both;
+}
+
+#scatterplot-svg-div, #svg-div {
+	float: left;
+}
+
+#scatterplot-title {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14pt;
+}
+
+#tooltip {
+	visibility: hidden;
+	background: black;
+	color: white;
+	padding: 10px;
+	position: absolute;
+	border-radius: 10px;
+	z-index: 10;
+}
+
+#tooltip-scatterplot {
+	visibility: hidden;
+	background: black;
+	color: white;
+	padding: 10px;
+	position: absolute;
+	border-radius: 10px;
+	z-index: 10;
+}
+
+.selection-panel {
+	margin-left: 40px;
+	margin-top: 60px;
+	float: left;
+	width: 225px;
+}
+
+.visualization-row {
+	width: 1275px;
+}
+
+.scatterplot-dropdown, .starplot-dropdown {
+	/*float: left;*/
+	margin-bottom: 0.65em;
+	width: 200px;
+	clear: both;
+}
+
+#color-value-select {
+	margin-bottom: 0.5em;
+}
+
+#gradient-min, #gradient-max {
+	font-weight: bold;
+	font-size: 0.8rem;
+}
+
+#division-dropdown button {
+	margin-top: 15px;
+}
+
+.axis path, .axis line {
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+}
+
+.axis text {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
