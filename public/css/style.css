@@ -38,7 +38,7 @@ cite {
 	clear: both;
 }
 
-#scatterplot-svg-div, #svg-div {
+#test-viz-div, #svg-div {
 	float: left;
 }
 

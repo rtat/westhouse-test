@@ -30,9 +30,13 @@ dataPromise.then(function (jsonData) {
 		// console.log(datum);
 		public_dataset.push(datum);
 	});
-	// console.log(public_dataset);
+	console.log(public_dataset);
 	setVariables(public_dataset);
 });
+
+function newDateCreator(d) {
+	return new Date(d);
+}
 
 function setVariables(dataset) {
 	dataArrayX = [];
@@ -40,12 +44,13 @@ function setVariables(dataset) {
 
 
 	public_dataset.forEach(function(obj) {
-		dataArrayX.push(obj.key_as_string);
+		//converting to date format
+		dataArrayX.push(newDateCreator(obj.key_as_string));
 		dataArrayY.push(obj.consumption.value);
-		console.log(obj.key_as_string);
+		// console.log(obj.key_as_string);
 		// console.log(obj.consumption.value);
 	});
-
+	// console.log(dataArrayX);
 	drawScatterplot(dataset, dataArrayX, dataArrayY);
 }
 
@@ -53,7 +58,10 @@ function setVariables(dataset) {
 function drawScatterplot(dataset, dataX, dataY) {
 	var xDomain = [d3.min(dataX), d3.max(dataX)];
 	var xRange = [padding.left, width-padding.right];
-	var xScale = d3.scale.linear()
+	// var xScale = d3.scale.linear()
+	// 			.range(xRange)
+	// 			.domain(xDomain);
+	var xScale = d3.time.scale()
 				.range(xRange)
 				.domain(xDomain);
 
@@ -65,6 +73,10 @@ function drawScatterplot(dataset, dataX, dataY) {
 
 	drawXAxis(xScale);
 	drawYAxis(yScale);
+	// creates points
+	var coordPoints = convertToCoords(dataX, dataY);
+	drawPoints(test_viz, coordPoints, xScale, yScale);
+	// console.log(xDomain);
 }
 
 // draws the scaled x-axis with its label
@@ -72,6 +84,7 @@ function drawXAxis(xScale){
 	var xAxis = d3.svg.axis()
 			.scale(xScale)
 			.orient("bottom");
+
 	test_viz.append("g")
 			.attr("class", "axis")
 			.attr("id", "x-axis")
@@ -105,4 +118,54 @@ function drawYAxis(yScale){
 			.attr("y", -45)
 			.style("text-anchor", "middle")
 			.text(y_axis_label);
+}
+
+function convertToCoords(dataX, dataY) {
+		var newArray = [];
+		for (var i = 0, len = dataX.length; i < dataX.length; i++) {
+			var tempObject = {x: dataX[i], y: dataY[i], id: i};
+			newArray.push(tempObject);
+		}
+		return newArray;
+}
+
+/*
+ *	Draws scatterplot points with IDs for retrieval of city index.
+*/
+function drawPoints(svg, coordPoints, xScale, yScale) {
+	svg.selectAll("circle")
+		.data(coordPoints)
+		.enter()
+		.append("circle")
+		// .attr("id", function(d, i) {
+		// 	return "scatterplot-city-" + i;
+		// })
+		// .filter(function(d, i) {
+		// filter according to division value
+			// 	if (division_value > 0) {
+			// 		return public_dataset[d.id].division == division_value;
+			// 	}
+			// 	// display all divisions
+			// 	else {
+			// 		return public_dataset[d.id].division;
+			// 	}
+				
+			// })
+		// .attr("cx", function (d,i){
+		// 	return xScale(d.x);
+		// })
+		.attr("cx", function(d) {
+			return xScale(d.x);
+		})
+		.attr("cy", function (d,i){
+			return yScale(d.y);
+		})
+		.attr("r", 4)
+		.attr("fill", "purple")
+		.attr("class", "unclicked");
+
+			// .on("click", scatterClickedFn)
+			// .on("mouseover", scatterMouseOverFn)
+			// .on("mouseout", scatterMouseOutFn);
+
 }
