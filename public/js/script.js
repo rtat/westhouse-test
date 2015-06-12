@@ -20,6 +20,9 @@ var test_viz = d3.select('#test-viz-div')
 				.attr("width", width)
 				.attr("height", height);
 
+// tooltip for viz spaces
+var test_MouseOverLines;
+
 // data retrieval
 var dataPromise = fetch('/data').then(function (response) {
 	return response.json();
@@ -30,7 +33,7 @@ dataPromise.then(function (jsonData) {
 		// console.log(datum);
 		public_dataset.push(datum);
 	});
-	console.log(public_dataset);
+	// console.log(public_dataset);
 	setVariables(public_dataset);
 });
 
@@ -50,7 +53,7 @@ function setVariables(dataset) {
 		// console.log(obj.key_as_string);
 		// console.log(obj.consumption.value);
 	});
-	// console.log(dataArrayX);
+
 	drawScatterplot(dataset, dataArrayX, dataArrayY);
 }
 
@@ -59,8 +62,6 @@ function drawScatterplot(dataset, dataX, dataY) {
 	var xDomain = [d3.min(dataX), d3.max(dataX)];
 	var xRange = [padding.left, width-padding.right];
 	// var xScale = d3.scale.linear()
-	// 			.range(xRange)
-	// 			.domain(xDomain);
 	var xScale = d3.time.scale()
 				.range(xRange)
 				.domain(xDomain);
@@ -73,10 +74,14 @@ function drawScatterplot(dataset, dataX, dataY) {
 
 	drawXAxis(xScale);
 	drawYAxis(yScale);
+
+	test_MouseOverLines = d3.select("#test-viz-div svg").append("g")
+			.attr("id", "lines-group");
+
 	// creates points
 	var coordPoints = convertToCoords(dataX, dataY);
 	drawPoints(test_viz, coordPoints, xScale, yScale);
-	// console.log(xDomain);
+
 }
 
 // draws the scaled x-axis with its label
@@ -137,9 +142,9 @@ function drawPoints(svg, coordPoints, xScale, yScale) {
 		.data(coordPoints)
 		.enter()
 		.append("circle")
-		// .attr("id", function(d, i) {
-		// 	return "scatterplot-city-" + i;
-		// })
+		.attr("id", function(d, i) {
+			return "Consumption " + xScale(d.x);
+		})
 		// .filter(function(d, i) {
 		// filter according to division value
 			// 	if (division_value > 0) {
@@ -151,10 +156,7 @@ function drawPoints(svg, coordPoints, xScale, yScale) {
 			// 	}
 				
 			// })
-		// .attr("cx", function (d,i){
-		// 	return xScale(d.x);
-		// })
-		.attr("cx", function(d) {
+		.attr("cx", function (d,i) {
 			return xScale(d.x);
 		})
 		.attr("cy", function (d,i){
@@ -162,10 +164,61 @@ function drawPoints(svg, coordPoints, xScale, yScale) {
 		})
 		.attr("r", 4)
 		.attr("fill", "purple")
-		.attr("class", "unclicked");
+		.attr("class", "unclicked")
+		// .on("click", scatterClickedFn)
+		.on("mouseover", scatterMouseOverFn)
+		.on("mouseout", scatterMouseOutFn);
 
-			// .on("click", scatterClickedFn)
-			// .on("mouseover", scatterMouseOverFn)
-			// .on("mouseout", scatterMouseOutFn);
+}
 
+var scatterMouseOverFn = function(d, i) {
+	var point = d3.select(this);
+	// current point will increase in radius
+	point
+		.transition()
+		.attr("r", 8);
+
+	var currentObj = public_dataset[d.id];
+
+	console.log(currentObj);
+
+	// draws tooltip
+	d3.select("#tooltip-test")
+		.style("visibility", "visible")
+		.style("top", (d3.event.pageY-15)+"px").style("left",(d3.event.pageX+20)+"px")
+		.html("<strong>" + currentObj.key_as_string+ "</strong>" +
+			"<p>Consumption: "+currentObj.consumption.value+"</p>");
+
+
+	// draws guidelines
+	test_MouseOverLines.append("line")
+		.attr("id", "x-line")
+		.attr("x1", point.attr("cx"))
+		.attr("y1", point.attr("cy"))
+		.attr("x2", point.attr("cx"))
+		.attr("y2", height-padding.bottom)
+		.style("stroke", "black")
+		.style("opacity", 0.3);
+
+	test_MouseOverLines.append("line")
+		.attr("id", "y-line")
+		.attr("x1", point.attr("cx"))
+		.attr("y1", point.attr("cy"))
+		.attr("x2", padding.left)
+		.attr("y2", point.attr("cy"))
+		.style("stroke", "black")
+		.style("opacity", 0.3);
+}
+
+var scatterMouseOutFn = function(d, i) {
+	if (d3.select(this).attr("class")=="unclicked") {
+		d3.select(this)
+			.transition()
+			.attr("r", 4);
+	}
+
+	test_MouseOverLines.select("#x-line").remove();
+	test_MouseOverLines.select("#y-line").remove();
+
+	d3.select("#tooltip-test").style("visibility", "hidden");
 }
