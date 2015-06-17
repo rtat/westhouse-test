@@ -24,7 +24,7 @@ var test_viz = d3.select('#test-viz-div')
 var test_MouseOverLines;
 
 // data retrieval
-var dataPromise = fetch('/data').then(function (response) {
+var dataPromise = fetch('http://142.58.183.207:5000/data').then(function (response) {
 	return response.json();
 });
 
