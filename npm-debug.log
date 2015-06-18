@@ -1,0 +1,25 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/home/rose/.nvm/versions/io.js/v2.2.1/bin/iojs',
+1 verbose cli   '/home/rose/.nvm/versions/io.js/v2.2.1/bin/npm',
+1 verbose cli   'run',
+1 verbose cli   'server' ]
+2 info using npm@2.11.0
+3 info using node@v2.2.1
+4 verbose stack Error: missing script: server
+4 verbose stack     at run (/home/rose/.nvm/versions/io.js/v2.2.1/lib/node_modules/npm/lib/run-script.js:142:19)
+4 verbose stack     at /home/rose/.nvm/versions/io.js/v2.2.1/lib/node_modules/npm/lib/run-script.js:58:5
+4 verbose stack     at /home/rose/.nvm/versions/io.js/v2.2.1/lib/node_modules/npm/node_modules/read-package-json/read-json.js:345:5
+4 verbose stack     at checkBinReferences_ (/home/rose/.nvm/versions/io.js/v2.2.1/lib/node_modules/npm/node_modules/read-package-json/read-json.js:309:45)
+4 verbose stack     at final (/home/rose/.nvm/versions/io.js/v2.2.1/lib/node_modules/npm/node_modules/read-package-json/read-json.js:343:3)
+4 verbose stack     at then (/home/rose/.nvm/versions/io.js/v2.2.1/lib/node_modules/npm/node_modules/read-package-json/read-json.js:113:5)
+4 verbose stack     at /home/rose/.nvm/versions/io.js/v2.2.1/lib/node_modules/npm/node_modules/read-package-json/read-json.js:300:12
+4 verbose stack     at FSReqWrap.readFileAfterClose [as oncomplete] (evalmachine.<anonymous>:382:3)
+5 verbose cwd /home/rose/Desktop/westhouse-test
+6 error Linux 3.10.18
+7 error argv "/home/rose/.nvm/versions/io.js/v2.2.1/bin/iojs" "/home/rose/.nvm/versions/io.js/v2.2.1/bin/npm" "run" "server"
+8 error node v2.2.1
+9 error npm  v2.11.0
+10 error missing script: server
+11 error If you need help, you may report this error at:
+11 error     <https://github.com/npm/npm/issues>
+12 verbose exit [ 1, true ]
