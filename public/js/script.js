@@ -9,6 +9,7 @@ var padding = {top: 50, bottom: 45, left: 60, right: 15};
 var public_dataset = [];
 var dataArrayX = [];
 var dataArrayY = [];
+var dayArray = [];
 
 // global non-static variables
 var x_axis_label = "Date";
@@ -23,8 +24,9 @@ var test_viz = d3.select('#test-viz-div')
 // tooltip for viz spaces
 var test_MouseOverLines;
 
-// data retrieval
-var dataPromise = fetch('http://142.58.183.207:5000/data').then(function (response) {
+// data retrieval for localhost:3030
+// for nodemon/app.js, localhost:3000: fetch('/data')
+var dataPromise = fetch('/data').then(function (response) {
 	return response.json();
 });
 
@@ -45,23 +47,101 @@ function setVariables(dataset) {
 	dataArrayX = [];
 	dataArrayY = [];
 
-
 	public_dataset.forEach(function(obj) {
-		//converting to date format
+		//converting to date format - scatterplot
 		dataArrayX.push(newDateCreator(obj.key_as_string));
 		dataArrayY.push(obj.consumption.value);
-		// console.log(obj.key_as_string);
-		// console.log(obj.consumption.value);
+
+		//for day viz
+		createDay(obj.key_as_string, obj.consumption.value);
 	});
 
-	drawScatterplot(dataset, dataArrayX, dataArrayY);
+	console.log(dayArray);
+	// drawDayViz();
+
+	// drawScatterplot(dataset, dataArrayX, dataArrayY);
 }
 
-// function find
+/*
+ * Dashboard creation
+*/
+function createDay(dateString, consumptionValue) {
+	var objDate = new Date(dateString);
+	var objDay = objDate.getFullYear()+"/"+(objDate.getMonth()+1)+"/"+objDate.getDate();
+
+	var thisHour = {
+		hour: objDate.getHours(),
+		totalC: consumptionValue
+	};
+
+	var result = search(objDay);
+
+	//check if day exists, Y: don't create new day N: create new day
+	if (result == true) {
+		//day exists, push to existing day
+		dayArray[dayArray.length-1].hours.push(thisHour);
+	} else {
+		//new day created
+		var thisDay = {
+			day: objDay,
+			totalC: 0,
+			hours: []
+		};
+	
+		thisDay.hours.push(thisHour);
+		dayArray.push(thisDay);
+	} 
+
+	//calculate total consumption
+    for (var i=0; i < dayArray.length; i++) {
+    	var total = 0;
+    	var currentArr = dayArray[i].hours;
+    	//go into each hour in the hours array
+    	currentArr.forEach(function (obj) {
+    		total += obj.totalC;
+    	});
+    	//update totalC
+    	dayArray[i].totalC = total;
+    }	
+}
+
+function search(nameKey){
+	if (dayArray.length != 0 && dayArray[dayArray.length-1].day == nameKey) {
+		return true;
+	} else {
+		return false;
+	}
+
+    // for (var i=0; i < dayArray.length; i++) {
+    //     if (dayArray[i].day == nameKey) {
+    //     	console.log(dayArray[i].day);
+    //         return dayArray[i];
+    //     } else {
+    //     	if (dayArray.length != 0) {console.log(dayArray[dayArray.length-1].day)};
+    //     	return null;
+    //     }
+    // }
+}
+
+function drawDayViz(dataset, dataX, dataY) {
+	// Calculating recent 7 days with values starting from most recent value
+	var recentDay = dataX[dataX.length-1];
+	console.log(recentDay.getMonth + " ");
+	// If the day has data, store it into an array
+
+
+	// console.log();
+}
+
+
+
+
+/*
+ *	Scatterplot visualization
+*/
 function drawScatterplot(dataset, dataX, dataY) {
 	var xDomain = [d3.min(dataX), d3.max(dataX)];
 	var xRange = [padding.left, width-padding.right];
-	// var xScale = d3.scale.linear()
 	var xScale = d3.time.scale()
 				.range(xRange)
 				.domain(xDomain);
@@ -134,9 +214,6 @@ function convertToCoords(dataX, dataY) {
 		return newArray;
 }
 
-/*
- *	Draws scatterplot points with IDs for retrieval of city index.
-*/
 function drawPoints(svg, coordPoints, xScale, yScale) {
 	svg.selectAll("circle")
 		.data(coordPoints)

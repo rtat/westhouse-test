@@ -17,8 +17,8 @@ app.get('/data', function (req, res) {
         "values" : {
           "date_histogram" : {
           "field" : "time",
-          "interval" : "1d",
-          "format" : "yyyy/MM/dd" 
+          "interval" : "1h",
+          "format" : "yyyy/MM/dd HH:mm:ss" 
           },
           "aggs": {
           "consumption": {

@@ -25,8 +25,8 @@ request('http://142.58.183.207:9200/jdbc/_search', {
       "values" : {
         "date_histogram" : {
         "field" : "time",
-        "interval" : "1d",
-        "format" : "yyyy/MM/dd" 
+        "interval" : "1h",
+        "format" : "yyyy/MM/dd HH:mm:ss" 
         },
         "aggs": {
         "consumption": {
