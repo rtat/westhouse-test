@@ -3,6 +3,7 @@
 <html lang='en'>
     <head>
         <meta charset='utf-8'>
+        <link rel="stylesheet" type="text/css" href="css/grid.css">
         <link rel="stylesheet" type="text/css" href="css/normalize.css">
         <link rel="stylesheet" type="text/css" href="css/style.css">
         <script src='js/d3.js'></script>
@@ -10,13 +11,16 @@
     </head>
     
     <body>
-        We should be able to see the data.
+        <div class ="grid">
 
-        <div id="db-day-div"></div>
+            <div class="col-1of1" id="db-day-div"></div>
 
-        <div id="tooltip-test"></div>
-        <div id="test-viz-div"></div>
-        
-        <script src='js/script.js'></script>
+            <!-- Scatterplot visualization -->
+            <div id="tooltip-test"></div>
+            <div id="test-viz-div"></div>
+            
+            <script src='js/script.js'></script>
+
+        </div> <!-- End of grid -->
     </body>
 </html>

@@ -1,9 +1,11 @@
 // sets up initial static variables
-var width = 1000;
-var height = 600;
 var scatterplot_width = 1000;
 var scatterplot_height = 600;
+var day_width = 700;
+var day_height = 400;
 var padding = {top: 50, bottom: 45, left: 60, right: 15};
+var colorLightArray = ["#AEC7E8", "#FFBB78", "#98E98A", "#FF9896", "#C5B0D5", "#C49C94", "#F7B6D2"];
+var colorArray = ["#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD", "#8C564B", "#E377C2"];
 
 // global arrays
 var public_dataset = [];
@@ -18,53 +20,55 @@ var y_axis_label = "Consumption";
 // viz spaces
 var test_viz = d3.select('#test-viz-div')
 				.append("svg")
-				.attr("width", width)
-				.attr("height", height);
+				.attr("width", scatterplot_width)
+				.attr("height", scatterplot_height);
+
+var day_viz = d3.select('#db-day-div')
+				.append("svg")
+				.attr("width", day_width)
+				.attr("height", day_height);
 
 // tooltip for viz spaces
 var test_MouseOverLines;
 
-// data retrieval for localhost:3030
-// for nodemon/app.js, localhost:3000: fetch('/data')
+/* Data retrieval 
+ * for nws, localhost:3030: 
+ 		fetch('http://142.58.183.207:5000/data')
+ * for nodemon/app.js, localhost:3000: 
+ 		fetch('/data')
+ */
 var dataPromise = fetch('/data').then(function (response) {
 	return response.json();
 });
 
 dataPromise.then(function (jsonData) {
 	jsonData.aggregations.values.buckets.forEach(function(datum) {
-		// console.log(datum);
 		public_dataset.push(datum);
 	});
-	// console.log(public_dataset);
 	setVariables(public_dataset);
 });
-
-function newDateCreator(d) {
-	return new Date(d);
-}
 
 function setVariables(dataset) {
 	dataArrayX = [];
 	dataArrayY = [];
 
 	public_dataset.forEach(function(obj) {
-		//converting to date format - scatterplot
+		//test viz: converting to date format
 		dataArrayX.push(newDateCreator(obj.key_as_string));
 		dataArrayY.push(obj.consumption.value);
 
-		//for day viz
+		//day viz: create dayArray for use
 		createDay(obj.key_as_string, obj.consumption.value);
 	});
 
-	console.log(dayArray);
-	// drawDayViz();
+	drawDayViz(dayArray);
 
 	// drawScatterplot(dataset, dataArrayX, dataArrayY);
 }
 
 /*
- * Dashboard creation
-*/
+ * Dashboard: Day array creation
+ */
 function createDay(dateString, consumptionValue) {
 	var objDate = new Date(dateString);
 	var objDay = objDate.getFullYear()+"/"+(objDate.getMonth()+1)+"/"+objDate.getDate();
@@ -74,14 +78,13 @@ function createDay(dateString, consumptionValue) {
 		totalC: consumptionValue
 	};
 
+	// Check if day exists, Y: don't create new day N: create new day
 	var result = search(objDay);
-
-	//check if day exists, Y: don't create new day N: create new day
 	if (result == true) {
-		//day exists, push to existing day
+		// Day exists, push to existing day
 		dayArray[dayArray.length-1].hours.push(thisHour);
 	} else {
-		//new day created
+		// New day created
 		var thisDay = {
 			day: objDay,
 			totalC: 0,
@@ -92,15 +95,15 @@ function createDay(dateString, consumptionValue) {
 		dayArray.push(thisDay);
 	} 
 
-	//calculate total consumption
+	// Calculate total consumption
     for (var i=0; i < dayArray.length; i++) {
     	var total = 0;
     	var currentArr = dayArray[i].hours;
-    	//go into each hour in the hours array
+    	// Go into each hour in the hours array
     	currentArr.forEach(function (obj) {
     		total += obj.totalC;
     	});
-    	//update totalC
+    	// Update totalC
     	dayArray[i].totalC = total;
     }	
 }
@@ -111,43 +114,147 @@ function search(nameKey){
 	} else {
 		return false;
 	}
-
-    // for (var i=0; i < dayArray.length; i++) {
-    //     if (dayArray[i].day == nameKey) {
-    //     	console.log(dayArray[i].day);
-    //         return dayArray[i];
-    //     } else {
-    //     	if (dayArray.length != 0) {console.log(dayArray[dayArray.length-1].day)};
-    //     	return null;
-    //     }
-    // }
 }
 
-function drawDayViz(dataset, dataX, dataY) {
+function drawDayViz(dataset) {
 	// Calculating recent 7 days with values starting from most recent value
-	var recentDay = dataX[dataX.length-1];
-	console.log(recentDay.getMonth + " ");
-	// If the day has data, store it into an array
+	var recentSevenArr = dataset.slice(-7);
+	console.log (recentSevenArr);
 
+	var curX = 0;
+	var curWidth = day_width/14;
+	var xArray = [];
+	var yArray = [];
 
-	// console.log();
+	// Create 7 rectangles, Hover = light RGB, Selected = RGB
+	recentSevenArr.forEach(function (obj, i) {
+		var rectangle = day_viz.append("rect")
+								.attr("x", curX)
+								.attr("y", 0)
+								.attr("width", (day_width/7))
+								.attr("height", 300)
+								.attr("fill", "#ffffff")
+								.attr("stroke", "#000000")
+								.attr("class", "unclicked")
+								.attr("id", i)
+								.on("click", rectClickedFn)
+								.on("mouseover", rectMouseOverFn)
+								.on("mouseout", rectMouseOutFn);
+		curX += (day_width/7);
+
+		// Create xArray and yArray
+		var xVal = curWidth;
+		curWidth += day_width/7;
+		xArray.push(xVal);
+		yArray.push(obj.totalC);
+
+	});
+
+	// Calculate xDomain, xRange, xScale, and vice versa for y
+	var xDomain = [d3.min(xArray), d3.max(xArray)];
+	var xRange = [0, day_width];
+	var xScale = d3.scale.linear()
+					.domain(xDomain)
+					.range(xRange);
+
+	var yDomain = [d3.min(yArray), d3.max(yArray)];
+	var yRange = [day_height-125, 25];
+	var yScale = d3.scale.linear()
+					.domain(yDomain)
+					.range(yRange);
+
+	// Combine xArray and yArray to coordinates
+	
+
+	// Create line graph of total consumption for each of the 7 days
+	// drawLines(day_viz, );
 }
 
+// When the rectangle is hovered over, change colour and show hours
+var rectMouseOverFn = function(d, i) {
+	// Retrieve index
+	var colorIndex = colorLightArray[d3.select(this).attr("id")];
 
+	if (d3.select(this).attr("class")=="unclicked") {
+		d3.select(this)
+			.transition()
+			.attr("fill", colorIndex);
+	}
+}
 
+var rectMouseOutFn = function(d, i) {
+	if (d3.select(this).attr("class")=="unclicked") {
+		d3.select(this)
+			.transition()
+			.attr("fill", "#ffffff");
+	}
+
+	// test_MouseOverLines.select("#x-line").remove();
+	// test_MouseOverLines.select("#y-line").remove();
+
+	// d3.select("#tooltip-test").style("visibility", "hidden");
+}
+
+var rectClickedFn = function(d, i) {
+	// Retrieve which index it is
+	var colorIndex = colorArray[d3.select(this).attr("id")];
+
+	// Unclicked to clicked
+	if (d3.select(this).attr("class") == "unclicked") {
+		d3.select(this)
+			.transition()
+			.attr("height", 400)
+			.attr("fill", colorIndex)
+			.attr("class", "clicked");
+
+		// Show hourly line graph
+	} 
+	// Clicked to unclicked
+	else if (d3.select(this).attr("class") == "clicked") {
+		d3.select(this)
+			.transition()
+			.attr("height", 300)
+			.attr("fill", "#ffffff")
+			.attr("class", "unclicked");
+
+		// Hide hourly line graph
+	}
+}
+
+function drawLines(svg, coordPoints, xScale, yScale) {
+	svg.selectAll("circle")
+		.data(coordPoints)
+		.enter()
+		.append("circle")
+		.attr("id", function(d, i) {
+			return "Consumption " + xScale(d.x);
+		})
+		.attr("cx", function (d,i) {
+			return xScale(d.x);
+		})
+		.attr("cy", function (d,i){
+			return yScale(d.y);
+		})
+		.attr("r", 4)
+		.attr("fill", "black");
+}
 
 /*
  *	Scatterplot visualization
-*/
+ */
+function newDateCreator(d) {
+	return new Date(d);
+}
+
 function drawScatterplot(dataset, dataX, dataY) {
 	var xDomain = [d3.min(dataX), d3.max(dataX)];
-	var xRange = [padding.left, width-padding.right];
+	var xRange = [padding.left, scatterplot_width-padding.right];
 	var xScale = d3.time.scale()
 				.range(xRange)
 				.domain(xDomain);
 
 	var yDomain = [d3.min(dataY), d3.max(dataY)];
-	var yRange = [height-padding.bottom, padding.top];
+	var yRange = [scatterplot_height-padding.bottom, padding.top];
 	var yScale = d3.scale.linear()
 				.range(yRange)
 				.domain(yDomain);
