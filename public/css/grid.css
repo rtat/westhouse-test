@@ -1,0 +1,93 @@
+/* Grid */
+ 
+[class*='col-'] {
+    float: left;
+    padding: 0;
+    text-align: left;
+}
+ 
+.grid {
+    margin: 0 auto;
+    background-color: white;
+    width:95%;
+    height: 100%;
+}
+ 
+.grid:after {
+    content: "";
+    display: block;
+    clear: both;
+}
+ 
+*, *:after, *:before; {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+ 
+nav:after {
+    content: "";
+    display: block;
+    clear: both;
+    margin-bottom: 2rem;
+}
+ 
+.col-1of4 {
+    width: 25%;
+    text-align: center;
+}
+ 
+.col-1of3 {
+    width: 30%;
+    float: left;
+}
+ 
+.col-2of3-right {
+    width: 60%;
+    float: right;
+}
+ 
+.col-1of2-left {
+    margin: 0 5% 0 15%;
+    width: 30%;
+    float:left;
+}
+ 
+.col-1of2-right {
+    margin: 0 15% 0 5%;
+    width: 30%;
+    float:right;
+}
+ 
+.col-1of1 {
+    width: 95%;
+    margin: 0 2.5% 0;
+}
+ 
+.col-1of1-narrow {
+    width: 70%;
+    margin: 0 15% 0;
+}
+ 
+.col-1of1-half {
+    width: 35%;
+    margin: 0 30% 0;
+}
+@media (max-width: 1020px) {
+}
+ 
+@media (max-width: 800px) {
+    [class*="col-"] {
+        width: 100%; 
+        margin: 0 2%;
+        float:none;
+        padding-bottom: 3em;
+    }
+}
+@media (max-width: 700px) {
+    [class*="col-"] {
+        width: 100%; 
+        margin: 0 2%;
+        float:none;
+    }
+}

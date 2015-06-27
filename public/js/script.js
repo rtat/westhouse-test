@@ -4,6 +4,9 @@ var scatterplot_height = 600;
 var day_width = 700;
 var day_height = 400;
 var padding = {top: 50, bottom: 45, left: 60, right: 15};
+var dayTop_padding = {top: 100, bottom: 125, left: day_width/14, right: day_width-day_width/14};
+// var dayBottom_padding = {top: 320, bottom: 0, left: 0, right: 0};
+var dayBottom_XY = {x: 0, y: 300};
 var colorLightArray = ["#AEC7E8", "#FFBB78", "#98E98A", "#FF9896", "#C5B0D5", "#C49C94", "#F7B6D2"];
 var colorArray = ["#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD", "#8C564B", "#E377C2"];
 
@@ -12,6 +15,7 @@ var public_dataset = [];
 var dataArrayX = [];
 var dataArrayY = [];
 var dayArray = [];
+var recentSevenArr = [];
 
 // global non-static variables
 var x_axis_label = "Date";
@@ -27,6 +31,11 @@ var day_viz = d3.select('#db-day-div')
 				.append("svg")
 				.attr("width", day_width)
 				.attr("height", day_height);
+
+// layer groups for viz spaces
+var layerBG = day_viz.append("g");
+var layerData = day_viz.append("g");
+var layerBottomData = day_viz.append("g");
 
 // tooltip for viz spaces
 var test_MouseOverLines;
@@ -118,20 +127,27 @@ function search(nameKey){
 
 function drawDayViz(dataset) {
 	// Calculating recent 7 days with values starting from most recent value
-	var recentSevenArr = dataset.slice(-7);
-	console.log (recentSevenArr);
+	recentSevenArr = dataset.slice(-7);
 
 	var curX = 0;
-	var curWidth = day_width/14;
+	var xDist = day_width/7;
 	var xArray = [];
 	var yArray = [];
+	var coordsArray = [];
+
+	// Variables for a day's hours (day bottom viz)
+	var curL = 0;
+	var curR = day_width/7;
+	var padChange = day_width/7;
+	var padArray = [];
+	var totalHourY = [];
 
 	// Create 7 rectangles, Hover = light RGB, Selected = RGB
 	recentSevenArr.forEach(function (obj, i) {
-		var rectangle = day_viz.append("rect")
+		var rectangle = layerBG.append("rect")
 								.attr("x", curX)
 								.attr("y", 0)
-								.attr("width", (day_width/7))
+								.attr("width", xDist)
 								.attr("height", 300)
 								.attr("fill", "#ffffff")
 								.attr("stroke", "#000000")
@@ -140,34 +156,69 @@ function drawDayViz(dataset) {
 								.on("click", rectClickedFn)
 								.on("mouseover", rectMouseOverFn)
 								.on("mouseout", rectMouseOutFn);
-		curX += (day_width/7);
+		curX += xDist;
 
 		// Create xArray and yArray
-		var xVal = curWidth;
-		curWidth += day_width/7;
+		var xVal = i;
+		var yVal = obj.totalC;
+		var tempXY = {x: xVal, y: yVal};
 		xArray.push(xVal);
-		yArray.push(obj.totalC);
+		yArray.push(yVal);
+		coordsArray.push(tempXY);
 
+		// Vars
+		var xArrayHours = [];
+		var yArrayHours = [];
+		var coordsArrayHours = [];
+
+		obj.hours.forEach(function (obj, index) {
+			xArrayHours.push(index);
+			yArrayHours.push(obj.totalC);
+			totalHourY.push(obj.totalC);
+			coordsArrayHours.push({x: index, y: obj.totalC});
+		});
+
+		// Dynamic padding for each of the day's hours
+		var dayBottom_padding = {top: 320, bottom: 0, left: curL, right: curR};
+		padArray.push({p: dayBottom_padding, x: xArrayHours, y: yArrayHours, coord: coordsArrayHours});
+		// var xyScaleObjHours = xyScale(xArrayHours, yArrayHours, dayBottom_padding, day_height);
+
+		// // Might push to array, need the real min max for y
+		// drawBottomLines(layerBottomData, coordsArrayHours, xyScaleObjHours.x, xyScaleObjHours.y, i);
+
+		curL += padChange;
+		curR += padChange;
 	});
 
 	// Calculate xDomain, xRange, xScale, and vice versa for y
-	var xDomain = [d3.min(xArray), d3.max(xArray)];
-	var xRange = [0, day_width];
+	var xyScaleObj = xyScale(xArray, yArray, dayTop_padding, day_height);
+	
+	// Create line graph of total consumption for each of the 7 days
+	drawTopLines(layerData, coordsArray, xyScaleObj.x, xyScaleObj.y);
+
+	// Line graph of specific day, yArr contains all 7 days for comparison
+	padArray.forEach(function (obj, index) {
+		var xyScaleObjHours = xyScale(obj.x, totalHourY, obj.p, day_height);
+		drawBottomLines(layerBottomData, obj.coord, xyScaleObjHours.x, xyScaleObjHours.y, index);
+	});
+}
+
+// Returns xScale and yScale
+function xyScale (xArr, yArr, p, h) {
+	var xDomain = [d3.min(xArr), d3.max(xArr)];
+	var xRange = [p.left, p.right];
 	var xScale = d3.scale.linear()
 					.domain(xDomain)
 					.range(xRange);
 
-	var yDomain = [d3.min(yArray), d3.max(yArray)];
-	var yRange = [day_height-125, 25];
+	var yDomain = [d3.min(yArr), d3.max(yArr)];
+	var yRange = [h-p.bottom, p.top];
 	var yScale = d3.scale.linear()
 					.domain(yDomain)
 					.range(yRange);
 
-	// Combine xArray and yArray to coordinates
-	
-
-	// Create line graph of total consumption for each of the 7 days
-	// drawLines(day_viz, );
+	var xyObj = {x: xScale, y: yScale};
+	return xyObj;
 }
 
 // When the rectangle is hovered over, change colour and show hours
@@ -188,16 +239,12 @@ var rectMouseOutFn = function(d, i) {
 			.transition()
 			.attr("fill", "#ffffff");
 	}
-
-	// test_MouseOverLines.select("#x-line").remove();
-	// test_MouseOverLines.select("#y-line").remove();
-
-	// d3.select("#tooltip-test").style("visibility", "hidden");
 }
 
 var rectClickedFn = function(d, i) {
 	// Retrieve which index it is
-	var colorIndex = colorArray[d3.select(this).attr("id")];
+	var thisIndex = d3.select(this).attr("id");
+	var colorIndex = colorArray[thisIndex];
 
 	// Unclicked to clicked
 	if (d3.select(this).attr("class") == "unclicked") {
@@ -205,9 +252,11 @@ var rectClickedFn = function(d, i) {
 			.transition()
 			.attr("height", 400)
 			.attr("fill", colorIndex)
-			.attr("class", "clicked");
-
+			.attr("class", "clicked")
 		// Show hourly line graph
+		d3.select("#hour"+thisIndex)
+			.transition()
+			.style("opacity", 1);
 	} 
 	// Clicked to unclicked
 	else if (d3.select(this).attr("class") == "clicked") {
@@ -216,19 +265,50 @@ var rectClickedFn = function(d, i) {
 			.attr("height", 300)
 			.attr("fill", "#ffffff")
 			.attr("class", "unclicked");
-
 		// Hide hourly line graph
+		d3.select("#hour"+thisIndex)
+			.transition()
+			.style("opacity", 0);
 	}
 }
 
-function drawLines(svg, coordPoints, xScale, yScale) {
+function drawBottomLines(svg, coordPoints, xScale, yScale, id) {
+	var lineFunction = d3.svg.line()
+					.x(function(d) { return xScale(d.x); })
+					.y(function(d) { return yScale(d.y); })
+					.interpolate("linear");
+
+	// Draw lines
+	svg.append("path")
+		.attr("d", lineFunction(coordPoints))
+		.attr("id", "hour"+id)
+		.attr("stroke", "black")
+		.attr("stroke-width", 2)
+		.attr("fill", "none")
+		.style("opacity", 0);;
+}
+
+function drawTopLines(svg, coordPoints, xScale, yScale) {
+	var lineFunction = d3.svg.line()
+					.x(function(d) { return xScale(d.x); })
+					.y(function(d) { return yScale(d.y); })
+					.interpolate("linear");
+
+	// Draw lines
+	svg.append("path")
+		.attr("d", lineFunction(coordPoints))
+		.attr("stroke", "black")
+		.attr("stroke-width", 2)
+		.attr("fill", "none");
+
+	// Draw points
 	svg.selectAll("circle")
 		.data(coordPoints)
 		.enter()
 		.append("circle")
-		.attr("id", function(d, i) {
-			return "Consumption " + xScale(d.x);
-		})
+		// .attr("id", function(d, i) {
+		// 	return "Consumption " + xScale(d.x);
+		// })
 		.attr("cx", function (d,i) {
 			return xScale(d.x);
 		})
@@ -329,17 +409,6 @@ function drawPoints(svg, coordPoints, xScale, yScale) {
 		.attr("id", function(d, i) {
 			return "Consumption " + xScale(d.x);
 		})
-		// .filter(function(d, i) {
-		// filter according to division value
-			// 	if (division_value > 0) {
-			// 		return public_dataset[d.id].division == division_value;
-			// 	}
-			// 	// display all divisions
-			// 	else {
-			// 		return public_dataset[d.id].division;
-			// 	}
-				
-			// })
 		.attr("cx", function (d,i) {
 			return xScale(d.x);
 		})
@@ -363,8 +432,6 @@ var scatterMouseOverFn = function(d, i) {
 		.attr("r", 8);
 
 	var currentObj = public_dataset[d.id];
-
-	console.log(currentObj);
 
 	// draws tooltip
 	d3.select("#tooltip-test")
