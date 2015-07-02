@@ -9,10 +9,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.get('/data', function (req, res) {
   req.query.interval
 
-  request('http://142.58.183.207:9200/jdbc/_search', {
-    method: 'GET',
-    
-    body: JSON.stringify({
+  request('http://142.58.183.207:5000/jdbc/_search?query=' + new Buffer(JSON.stringify({
       "aggs" : {
         "values" : {
           "date_histogram" : {
@@ -27,7 +24,8 @@ app.get('/data', function (req, res) {
           }
         }
       }
-    })
+    })).toString('base64'), {
+    method: 'GET'
 
   }).pipe(res);
 })

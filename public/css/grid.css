@@ -1,5 +1,22 @@
 /* Grid */
  
+
+.svg-container {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%; /* aspect ratio */
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: absolute;
+    top: 10px;
+    left: 0;
+}
+
+
 [class*='col-'] {
     float: left;
     padding: 0;
@@ -9,7 +26,7 @@
 .grid {
     margin: 0 auto;
     background-color: white;
-    width:95%;
+    width:100%;
     height: 100%;
 }
  
