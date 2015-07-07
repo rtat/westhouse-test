@@ -19,22 +19,44 @@ var day_viz;
 // layer groups for viz spaces
 var layerBG, layerData, layerBottomData;
 
-var query = btoa(JSON.stringify({
-  // query: {},
-	"aggs" : {
-		"values" : {
-    		"date_histogram" : {
-    			"field" : "time",
-    			"interval" : "1h",
-    			"format" : "yyyy/MM/dd HH:mm:ss" 
-    	  	},
-    		"aggs": {
-      			"consumption": {
-        			"avg": { "field": "value" }
-      			}
-      		}
-    	}
-  	}
+var querySeven = btoa(JSON.stringify({
+    query: { filtered: { filter: { range: { time: { gte: 'now-6d' } } } } },
+    aggs: {
+      series: {
+        terms: { field: 'series' },
+        aggs: {
+          values: {
+            'date_histogram': {
+              field: 'time',
+              format: 'yyyy/MM/dd HH:mm:ss',
+              interval: '1h'
+            },
+            aggs: {
+              consumption: {
+                avg: { field: 'value' }
+              }
+            }
+          }
+        }
+      }
+    }
+
+
+	// "aggs" : {
+	// 	"values" : {
+ //    		"date_histogram" : {
+ //    			"field" : "time",
+ //    			"interval" : "1h",
+ //    			"format" : "yyyy/MM/dd HH:mm:ss" 
+ //    	  	},
+ //    		"aggs": {
+ //      			"consumption": {
+ //        			"avg": { "field": "value" }
+ //      			}
+ //      		}
+ //    	}
+ //  	}
+
 }));
 
 /* Data retrieval 
@@ -43,13 +65,18 @@ var query = btoa(JSON.stringify({
  * for nodemon/app.js, localhost:3000: 
  		fetch('/data')
  */
-var dataPromise = fetch('http://142.58.183.207:5000/jdbc/_search?query=' + query).then(function (response) {
+var dataPromise = fetch('http://142.58.183.207:5000/jdbc/_search?query=' + querySeven).then(function (response) {
 	return response.json();
 });
 
 dataPromise.then(function (jsonData) {
 	var tempDataset = [];
-	jsonData.aggregations.values.buckets.forEach(function(datum) {
+	
+	// for all days query
+	// jsonData.aggregations.values.buckets.forEach(function(datum) {
+
+	// for 7 day query
+	jsonData.aggregations.series.buckets[0].values.buckets.forEach(function(datum) {	
 		tempDataset.push(datum);
 	});
 	setVariables(tempDataset);
